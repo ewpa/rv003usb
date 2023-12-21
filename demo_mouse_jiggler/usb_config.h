@@ -35,7 +35,7 @@ static const uint8_t device_descriptor[] = {
         0x08, //Max packet size for EP0 (This has to be 8 because of the USB Low-Speed Standard)
         0xfe, 0xca, //ID Vendor
         0x04, 0x40, //ID Product
-        0x05, 0x00, //ID Rev
+        0x07, 0x00, //ID Rev
         1, //Manufacturer string
         2, //Product string
         3, //Serial string
