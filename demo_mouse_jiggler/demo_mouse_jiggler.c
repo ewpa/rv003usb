@@ -25,8 +25,10 @@ void gpio_setup(void)
 	// Enable port module clocks.
 	RCC->APB2PCENR |= RCC_IOPAEN|RCC_IOPDEN;
 	// LEDS on PA2 and PD6 are P-P 2 MHz outputs.
-	GPIOA->CFGLR = (0b0010 << (2<<2));
-	GPIOD->CFGLR = (0b0010 << (6<<2));
+	GPIOA->CFGLR &= ~(0b1111 << (2<<2));
+	GPIOA->CFGLR |= (0b0010 << (2<<2));
+	GPIOD->CFGLR &= ~(0b1111 << (6<<2));
+	GPIOD->CFGLR |= (0b0010 << (6<<2));
 	led(0, 0);
 	led(1, 1);
 }
