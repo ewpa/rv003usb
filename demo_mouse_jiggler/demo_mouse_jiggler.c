@@ -1,9 +1,13 @@
+// Use LED on pin D4 (requires 'unbricking' to reprogram afterward).
+//#define USE_D4
+
 #include "ch32v003fun.h"
 #include <stdio.h>
 #include <string.h>
 #include "rv003usb.h"
 
 uint8_t rptmouse[4] = {0,0,0,0};
+bool usb_active = false;
 
 void led(unsigned short id, unsigned short on)
 {
@@ -17,6 +21,12 @@ void led(unsigned short id, unsigned short on)
 			if (on) GPIOD->BSHR = (1<<(6+16));
 			else GPIOD->BSHR = (1<<6);
 			break;
+		#ifdef USE_D4
+		case 2 : // D4
+			if (on) GPIOD->BSHR = (1<<(4+16));
+			else GPIOD->BSHR = (1<<4);
+			break;
+		#endif
 	}
 }
 
@@ -29,8 +39,13 @@ void gpio_setup(void)
 	GPIOA->CFGLR |= (0b0010 << (2<<2));
 	GPIOD->CFGLR &= ~(0b1111 << (6<<2));
 	GPIOD->CFGLR |= (0b0010 << (6<<2));
+	#ifdef USE_D4
+	GPIOD->CFGLR &= ~(0b1111 << (4<<2));
+	GPIOD->CFGLR |= (0b0010 << (4<<2));
+	led(2, 1);
+	#endif
 	led(0, 0);
-	led(1, 1);
+	led(1, 0);
 }
 
 int main()
@@ -38,12 +53,25 @@ int main()
 	SystemInit();
 	usb_setup();
 	gpio_setup();
-	while(1) {}
+	while(1)
+	{
+		if (usb_active)
+		{
+			usb_active = false;
+			led(1, 1); Delay_Ms(200);
+		}
+		else
+		{
+			led(1, 0); Delay_Ms(200);
+			led(1, 1); Delay_Ms(200);
+		}
+	}
 }
 
 void hid_task(void) {
 	int8_t const delta = 2;
 	rptmouse[1] = 0; // Hold pointer position by default.
+	usb_active = true;
 	// Poll every 100ms
 	const uint32_t interval_ms = 100;
 	static uint32_t start_ms = 0;
@@ -78,7 +106,10 @@ void usb_handle_user_in_request( struct usb_endpoint * e, uint8_t * scratchpad, 
 	if( endp )
 	{
 		hid_task();
-		usb_send_data( rptmouse, 4, 0, sendtok );
+		if (rptmouse[1])
+			usb_send_data( rptmouse, 4, 0, sendtok );
+		else
+			usb_send_empty( sendtok );
 	}
 	else
 	{

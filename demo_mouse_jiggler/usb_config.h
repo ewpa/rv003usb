@@ -107,7 +107,7 @@ static const uint8_t config_descriptor[] = {
         0x81,                     // Endpoint Address
         0x03,                     // Attributes
         0x08, 0x00,               // Size
-        1,                        // Interval (Was 0x0a)
+        0xff,                     // Interval (Was 0x0a)
 };
 
 #define STR_MANUFACTURER u"Generic"
